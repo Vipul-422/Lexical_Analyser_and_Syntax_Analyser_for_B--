@@ -14,7 +14,7 @@ int flag = 0;
 "[A-Z][0-9]*(?=\$)"        {if(!flag) {yylval.str = strdup(yytext); return STRING;}}
 "[A-Z][0-9]*(?=!)"          {if(!flag) {yylval.str = strdup(yytext); return FLOAT;}}
 [A-Z][0-9]*               {if(!flag) {yylval.str = strdup(yytext); return INT;}}
-[0-9]+                   {if(!flag) {return INT_LIT;}}
+[0-9]+                   {if(!flag) {yylval.num = atoi(yytext); return INT_LIT;}}
 "(\"[a-zA-Z0-9]*\")"       {if(!flag) {return STRING_LIT;}}
 "([0-9]+\.[0-9]{7})"       {if(!flag) {return FLOAT_LIT;}        }
 "([0-9]+\.[0-9]{7})"       {if(!flag) {return DOUBLE_LIT;}}
@@ -56,7 +56,7 @@ int flag = 0;
 "RETURN"                 {if(!flag) {return RETURN;}    }
 "REM"                    {flag = 1;}
 \n                       {if(flag) {flag = 0;}}
-[ \t]+                   /* ignore whitespace */
+[\s\t]+                   /* ignore whitespace */
 
 %%
 int yywrap(){
