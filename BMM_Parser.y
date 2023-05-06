@@ -140,6 +140,57 @@ stat
     }
 }
 
+stat:
+DATA values
+|
+DEF FNID EQ expr
+|
+DIM array
+|
+for
+|
+NEXT INT_LIT
+|
+GOSUB INT_LIT
+|
+GOTO INT_LIT
+|
+IF booleanexprs THEN INT_LIT
+|
+LET letstate
+|
+INPUT values
+|
+PRINT print_expr
+
+
+;
+
+print_expr:
+print_expr expr delimiter
+|
+expr delimiter
+;
+
+delimiter:
+COMMA|SEMI
+;
+
+letstate:
+expr EQ expr
+;
+
+for:
+FOR INT_LIT EQ expr TO expr STEP expr
+|
+FOR INT_LIT EQ expr TO expr
+;
+
+array:
+array COMMA ARRAY_LIT
+|
+ARRAY_LIT
+;
 
 values:
 values COMMA value
@@ -197,6 +248,12 @@ FLOAT_LIT
 ARRAY_LIT
 |
 INT
+|
+STRING
+|
+DOUBLE
+|
+FLOAT
 ;
 
 
