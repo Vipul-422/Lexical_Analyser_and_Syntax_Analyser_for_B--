@@ -162,8 +162,6 @@ LET letstate
 INPUT values
 |
 PRINT print_expr
-
-
 ;
 
 print_expr:
@@ -178,6 +176,8 @@ COMMA|SEMI
 
 letstate:
 expr EQ expr
+|
+STRING EQ STRING_LIT
 ;
 
 for:
@@ -210,6 +210,8 @@ expr relop expr
 expr
 |
 LEFT_PAREN booleanexpr RIGHT_PAREN
+|
+NOT booleanexpr
 ;
 
 expr:
@@ -248,8 +250,6 @@ FLOAT_LIT
 ARRAY_LIT
 |
 INT
-|
-STRING
 |
 DOUBLE
 |
