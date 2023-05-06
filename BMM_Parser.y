@@ -24,6 +24,11 @@ main()
     int num;
     char* str;
 }
+%left EQ NEQ LT GT LTE GTE
+%left PLUS MINUS
+%left MUL DIV
+%left EXP
+%left LEFT_PAREN RIGHT_PAREN
 
 
 
@@ -135,42 +140,48 @@ stat
     }
 }
 
-stat:
-DATA values
-|
-DEF FNID EQ exprs
-;
 
 values:
 values COMMA value
-|value
+|
+value
 ;
 
-exprs:
-exprs op expr
+booleanexprs:
+booleanexprs logop booleanexprs
+|
+booleanexpr
+;
+
+booleanexpr:
+expr relop expr
 |
 expr
 |
-MINUS expr
-|
-NOT expr
+LEFT_PAREN booleanexpr RIGHT_PAREN
 ;
+
 expr:
 expr op expr
 |
 value
 |
+MINUS expr
+|
 LEFT_PAREN expr RIGHT_PAREN
 ;
 
 
-
-
-
-
-
 op:
-EXP|MINUS|MUL|DIV|PLUS|AND|OR|XOR|NOT|EQ|NEQ|LT|GT|LTE|GTE
+EXP|MINUS|MUL|DIV|PLUS
+;
+
+relop:
+EQ|NEQ|LT|GT|LTE|GTE
+;
+
+logop:
+AND|OR|XOR
 ;
 
 
@@ -179,16 +190,14 @@ EXP|MINUS|MUL|DIV|PLUS|AND|OR|XOR|NOT|EQ|NEQ|LT|GT|LTE|GTE
 value:
 INT_LIT
 |
-STRING_LIT
-|
 DOUBLE_LIT
 |
 FLOAT_LIT
 |
 ARRAY_LIT
+|
+INT
 ;
-
-expr: 
 
 
 %%

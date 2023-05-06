@@ -14,9 +14,7 @@ int flag = 0;
 "[A-Z][0-9]*(?=\$)"        {if(!flag) {yylval.str = strdup(yytext); return STRING;}}
 "[A-Z][0-9]*(?=!)"          {if(!flag) {yylval.str = strdup(yytext); return FLOAT;}}
 [A-Z][0-9]*               {if(!flag) {yylval.str = strdup(yytext); return INT;}}
-([A-Z]\([0-9]\))           {if(!flag) {return ARRAY_LIT;}}
-FN[A-Z]                     {if(!flag) {return FNID;}}
-[0-9]+                   {if(!flag) {return INT_LIT;}}
+[0-9]+                   {if(!flag) {yylval.num = atoi(yytext); return INT_LIT;}}
 "(\"[a-zA-Z0-9]*\")"       {if(!flag) {return STRING_LIT;}}
 "([0-9]+\.[0-9]{7})"       {if(!flag) {return FLOAT_LIT;}        }
 "([0-9]+\.[0-9]{7})"       {if(!flag) {return DOUBLE_LIT;}}
