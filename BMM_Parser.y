@@ -4,23 +4,46 @@
 #include <stdlib.h>
 
 int prevLine = -1;
-int array
+int array;
 int temp;
 char buffer[100];
+int gosub[10000];
+int returns=0;
+int gosubs=0;
+int forflag=0;
 
 void yyerror(const char *str)
 {
-    fprintf(stderr,"Error: %s\n",str);
+    fprintf(stderr,"Error: %s\nAfter %d\n",str, prevLine);
+    exit(-1);
 }
 
 main()
 {
+    for(int i=0; i<10000; i++) {
+        gosub[i]=0;
+    }
     freopen("test.txt", "r", stdin);
     yyparse();
+    for(int i=0; i<10000; i++) {
+        if(gosub[i]==1) {
+            gosubs++;
+        }
+    }
+    if(gosubs>returns) {
+        for(int i=0; i<10000; i++) {
+            if(gosub[i]==1) {
+                printf("Return statement might not be present for Subroutine on %d\n", i);
+            }
+        }
+    }
+    else if(gosubs<returns) {
+        yyerror("Extra return statements are present");
+    }
 }
 %}
 
-%token INT_LIT STRING_LIT FLOAT_LIT DOUBLE_LIT ARRAY_LIT DOUBLE INT STRING FLOAT LEFT_PAREN RIGHT_PAREN COMMA SEMI EXP MUL DIV PLUS MINUS EQ NEQ LT GT LTE GTE NOT AND OR XOR DATA DEF FNID DIM END STOP FOR TO STEP NEXT GOSUB GOTO IF THEN LET INPUT PRINT RETURN
+%token NEWLINE REM NOTHING INT_LIT STRING_LIT FLOAT_LIT DOUBLE_LIT ARRAY_LIT DOUBLE INT STRING FLOAT LEFT_PAREN RIGHT_PAREN COMMA SEMI EXP MUL DIV PLUS MINUS EQ NEQ LT GT LTE GTE NOT AND OR XOR DATA DEF FNID DIM END STOP FOR TO STEP NEXT GOSUB GOTO IF THEN LET INPUT PRINT RETURN
 %union {
     int num;
     char* str;
@@ -70,7 +93,7 @@ error '\n'
 ;
 
 statement:
-INT_LIT stat
+INT_LIT stat NEWLINE
 {
     if(prevLine < $<num>1) {
         prevLine = $<num>1;
@@ -116,7 +139,7 @@ INT_LIT stat
     }
 }
 |
-stat
+stat NEWLINE
 {
     if(prevLine<0) {
         yyerror("Expected a line number on first line");
@@ -142,37 +165,133 @@ stat
 }
 
 stat:
+REM comment
+|
 DATA values
 |
 DEF FNID EQ expr
 |
+DEF
+{
+    yyerror("Expected identifier or expression");
+}
+|
 DIM array
+|
+DIM comment
+{
+    yyerror("Array not declared properly");
+}
 |
 for
 |
-NEXT INT_LIT
+NEXT INT
+{
+    
+    if(forflag<=0) {
+        yyerror("Unexpected NEXT statement");
+    }
+    forflag--;
+}
+|
+NEXT comment
+{
+    yyerror("Expected an integer variable");
+}
 |
 GOSUB INT_LIT
+{
+    gosub[$<num>2] = 1;
+}
+|
+GOSUB comment
+{
+    yyerror("Expected an integer literal");
+}
 |
 GOTO INT_LIT
 |
+GOTO comment
+{
+    yyerror("Expected an integer literal");
+}
+|
 IF booleanexprs THEN INT_LIT
+|
+IF THEN INT_LIT
+{
+    yyerror("Expected a boolean expression");
+}
+|
+IF booleanexprs 
+{
+    yyerror("Expected a THEN");
+}
+|
+IF booleanexprs THEN comment
+{
+    yyerror("Expected an integer literal");
+}
 |
 LET letstate
 |
-INPUT values
+INPUT inputs
 |
 PRINT print_expr
 |
 RETURN
+{
+    returns++;
+}
 |
 STOP
+|
+error
+{
+    yyerror("WRONG INSTRUCTION");
+}
+;
+inputs: INT | DOUBLE | FLOAT | ARRAY_LIT | STRING |
+error
+{
+    yyerrok;
+    yyerror("Expected to be a varname");
+}
+;
+
+comment: comment NOTHING
+|
+NOTHING
+|
+
 ;
 
 print_expr:
-print_expr expr delimiter
+exprs
+{
+    yyerror("Expected a delimiter ;");
+}
 |
-expr delimiter
+exprs delimiter
+|
+print_expr exprs delimiter
+|
+error
+{
+    yyerror("Unexpected error");
+}
+;
+exprs:
+prinexpr | STRING_LIT | STRING;
+
+prinexpr:
+prinexpr op prinexpr
+|
+MINUS prinexpr
+|
+LEFT_PAREN prinexpr RIGHT_PAREN
+|
+INT|DOUBLE|FLOAT
 ;
 
 delimiter:
@@ -183,12 +302,24 @@ letstate:
 expr EQ expr
 |
 STRING EQ STRING_LIT
+|
+error
+{
+    yyerrok;
+    yyerror("Wrong assignment");
+}
 ;
 
 for:
-FOR INT_LIT EQ expr TO expr STEP expr
+FOR INT EQ expr TO expr STEP expr
+{
+    forflag++;
+}
 |
-FOR INT_LIT EQ expr TO expr
+FOR INT EQ expr TO expr
+{
+    forflag++;
+}
 ;
 
 array:
@@ -198,10 +329,17 @@ ARRAY_LIT
 ;
 
 values:
-values COMMA value
+values COMMA valuelit
 |
-value
+valuelit
+|
+error
+{
+    yyerrok;
+    yyerror("Expected literals");
+}
 ;
+valuelit: INT_LIT | STRING_LIT | DOUBLE_LIT | FLOAT_LIT;
 
 booleanexprs:
 booleanexprs logop booleanexprs
@@ -217,7 +355,11 @@ expr
 LEFT_PAREN booleanexpr RIGHT_PAREN
 |
 NOT booleanexpr
+|
+strings relop strings
 ;
+
+strings : STRING | STRING_LIT;
 
 expr:
 expr op expr
@@ -242,9 +384,6 @@ logop:
 AND|OR|XOR
 ;
 
-
-
-
 value:
 INT_LIT
 |
@@ -260,6 +399,5 @@ DOUBLE
 |
 FLOAT
 ;
-
 
 %%

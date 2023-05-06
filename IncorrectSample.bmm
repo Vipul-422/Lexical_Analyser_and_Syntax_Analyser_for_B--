@@ -1,6 +1,5 @@
-//incorrect code sample
-10 let a = "st"
-20 print FNa
+10 let A$ = "st"
+20 PRINT X
 40 return
-50 FOR "X" = 100 TO 110 STEP "X"++
+50 NEXT X
 60 END
