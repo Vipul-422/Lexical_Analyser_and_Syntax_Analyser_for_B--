@@ -4,6 +4,7 @@
 #include <stdlib.h>
 
 int prevLine = -1;
+int array
 int temp;
 char buffer[100];
 
@@ -162,6 +163,10 @@ LET letstate
 INPUT values
 |
 PRINT print_expr
+|
+RETURN
+|
+STOP
 ;
 
 print_expr:
