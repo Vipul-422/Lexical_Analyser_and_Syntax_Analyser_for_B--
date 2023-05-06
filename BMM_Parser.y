@@ -4,6 +4,7 @@
 #include <stdlib.h>
 
 int prevLine = -1;
+char buffer[100];
 
 void yyerror(const char *str)
 {
@@ -40,27 +41,35 @@ END
 ;
 
 statements: 
-statements INT_LIT statement
+statements statement
 |
-INT_LIT statement
+statement
+|
+error '\n'
+{
+    yyerrok;
+    yyerror("");
+}
+;
+
+statement:
+INT_LIT stat;
 {
     prevLine = $<num>1;
 }
 |
-statement
+stat
 {
     if(prevLine<0) {
         yyerror("Expected a line number on first line");
     }
     else {
-        char buffer[4];
         sprintf(buffer, "%d", prevLine);
-        yyerror(strcat("Expected a line number after line ", buffer));
+        yyerror(strcat("Expected a line number on line ", buffer));
     }
 }
-;
 
-statement:
+stat:
 INT
 ;
 %%
